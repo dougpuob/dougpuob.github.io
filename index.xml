@@ -1,90 +1,19 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title></title>
-    <link>/</link>
-    <description>Recent content on </description>
+    <title>Douglas Chen</title>
+    <link>https://dougpuob.github.io/</link>
+    <description>Recent content on Douglas Chen</description>
     <generator>Hugo -- gohugo.io</generator>
-    <lastBuildDate>Sun, 30 May 2021 11:53:06 +0800</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    <language>en-us</language>
+    <lastBuildDate>Sun, 30 May 2021 11:53:06 +0800</lastBuildDate><atom:link href="https://dougpuob.github.io/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>44444444444444</title>
-      <link>/posts/4/</link>
+      <title>◉ Build speed comparison between LXC, QEMU, and Native by LLVM</title>
+      <link>https://dougpuob.github.io/posts/20210530-build-speed-comparison-btw-lxc-qemu-and-baremetal-by-llvm/</link>
       <pubDate>Sun, 30 May 2021 11:53:06 +0800</pubDate>
       
-      <guid>/posts/4/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>5555555555555</title>
-      <link>/posts/5/</link>
-      <pubDate>Sun, 30 May 2021 11:53:06 +0800</pubDate>
-      
-      <guid>/posts/5/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>66666666666666</title>
-      <link>/posts/6/</link>
-      <pubDate>Sun, 30 May 2021 11:53:06 +0800</pubDate>
-      
-      <guid>/posts/6/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>77777777777777</title>
-      <link>/posts/20210530-llvm/</link>
-      <pubDate>Sun, 30 May 2021 11:53:06 +0800</pubDate>
-      
-      <guid>/posts/20210530-llvm/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>My Second Post</title>
-      <link>/posts/my-second-post/</link>
-      <pubDate>Sun, 30 May 2021 11:53:06 +0800</pubDate>
-      
-      <guid>/posts/my-second-post/</guid>
-      <description>222222222222222222222222222</description>
-    </item>
-    
-    <item>
-      <title>About</title>
-      <link>/about/</link>
-      <pubDate>Sat, 29 May 2021 15:32:56 +0800</pubDate>
-      
-      <guid>/about/</guid>
-      <description>None</description>
-    </item>
-    
-    <item>
-      <title>Projects</title>
-      <link>/projects/</link>
-      <pubDate>Sat, 29 May 2021 15:32:56 +0800</pubDate>
-      
-      <guid>/projects/</guid>
-      <description>None.</description>
-    </item>
-    
-    <item>
-      <title>1111111111111111111111t</title>
-      <link>/posts/my-first-post/</link>
-      <pubDate>Sat, 29 May 2021 15:28:22 +0800</pubDate>
-      
-      <guid>/posts/my-first-post/</guid>
-      <description>1111111111111111111111t</description>
-    </item>
-    
-    <item>
-      <title>Example article title</title>
-      <link>/posts/3/</link>
-      <pubDate>Mon, 21 Aug 2017 00:00:00 +0000</pubDate>
-      
-      <guid>/posts/3/</guid>
-      <description></description>
+      <guid>https://dougpuob.github.io/posts/20210530-build-speed-comparison-btw-lxc-qemu-and-baremetal-by-llvm/</guid>
+      <description>敗了一顆AMD Ryzen 9 3900X(12 Cores, 24 Threads)，把RAM置頂到192GB，編譯速度遠勝舊機器，想做些實驗留下記錄把感覺數據化。我把幾個我曾經使用過的開發環境都放入測試，主要是測試原生機與虛擬機(Windows/Linux in QEMU/KVM、LXC)在編譯LLVM專案榨乾CPU資源的同時，比較那一種花的時間比較少。</description>
     </item>
     
   </channel>

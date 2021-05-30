@@ -1,26 +1,54 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Tags on </title>
-    <link>/tags/</link>
-    <description>Recent content in Tags on </description>
+    <title>Tags on Douglas Chen</title>
+    <link>https://dougpuob.github.io/tags/</link>
+    <description>Recent content in Tags on Douglas Chen</description>
     <generator>Hugo -- gohugo.io</generator>
-    <lastBuildDate>Mon, 21 Aug 2017 00:00:00 +0000</lastBuildDate><atom:link href="/tags/index.xml" rel="self" type="application/rss+xml" />
+    <language>en-us</language>
+    <lastBuildDate>Sun, 30 May 2021 11:53:06 +0800</lastBuildDate><atom:link href="https://dougpuob.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Another test</title>
-      <link>/tags/another-test/</link>
-      <pubDate>Mon, 21 Aug 2017 00:00:00 +0000</pubDate>
+      <title>KVM</title>
+      <link>https://dougpuob.github.io/tags/kvm/</link>
+      <pubDate>Sun, 30 May 2021 11:53:06 +0800</pubDate>
       
-      <guid>/tags/another-test/</guid>
+      <guid>https://dougpuob.github.io/tags/kvm/</guid>
       <description></description>
     </item>
     
     <item>
-      <title>Test</title>
-      <link>/tags/test/</link>
-      <pubDate>Mon, 21 Aug 2017 00:00:00 +0000</pubDate>
+      <title>LLVM</title>
+      <link>https://dougpuob.github.io/tags/llvm/</link>
+      <pubDate>Sun, 30 May 2021 11:53:06 +0800</pubDate>
       
-      <guid>/tags/test/</guid>
+      <guid>https://dougpuob.github.io/tags/llvm/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>LXC</title>
+      <link>https://dougpuob.github.io/tags/lxc/</link>
+      <pubDate>Sun, 30 May 2021 11:53:06 +0800</pubDate>
+      
+      <guid>https://dougpuob.github.io/tags/lxc/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>PVE</title>
+      <link>https://dougpuob.github.io/tags/pve/</link>
+      <pubDate>Sun, 30 May 2021 11:53:06 +0800</pubDate>
+      
+      <guid>https://dougpuob.github.io/tags/pve/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>QEMU</title>
+      <link>https://dougpuob.github.io/tags/qemu/</link>
+      <pubDate>Sun, 30 May 2021 11:53:06 +0800</pubDate>
+      
+      <guid>https://dougpuob.github.io/tags/qemu/</guid>
       <description></description>
     </item>
     
