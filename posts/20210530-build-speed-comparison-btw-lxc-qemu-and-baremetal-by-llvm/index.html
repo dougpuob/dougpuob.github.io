@@ -149,6 +149,7 @@ if (!doNotTrack) {
 <h2 id="-測試結果">◉ 測試結果</h2>
 <h3 id="-測試數據">▪ 測試數據</h3>
 <p><img src="https://dougpuob.github.io/posts/images/20210530-build-speed-comparison-btw-lxc-qemu-and-baremetal-by-llvm/summary-result-table.png" alt="Column chart"></p>
+<p><img src="https://dougpuob.github.io/posts/images/20210530-build-speed-comparison-btw-lxc-qemu-and-baremetal-by-llvm/summary-result-table-percentage.png" alt="Column chart"></p>
 <p>這份測試所 &hellip;</p>
 <ul>
 <li>有的完整詳細的測試數據表，可以在這[<a href="https://dougpuob.github.io/posts/images/20210530-build-speed-comparison-btw-lxc-qemu-and-baremetal-by-llvm/summary-result-table-details.png">下載</a>]的到。</li>
@@ -238,11 +239,11 @@ if (!doNotTrack) {
 <p>整個測試大概花了2~3天完成，其中包括了等待與手殘重測所花的時間。測試中所使用到的QEMU/KVM與LXC都是基於PVE的環境，過程遇到些問題要感謝<a href="http://blog.jason.tools/" title="節省工具箱">節省哥</a>的幫助，還好有他我的PVE之路走的格外的順利。</p>
 <p><strong>我大至用條列式整理我的結論：</strong></p>
 <ol>
-<li>Baremetal的表現不意外是最好的，LXC的表現也非常優秀，兩個數值非常相近。LXC花的時間比Baremetal多約<code>6%</code>(僅Linux)。</li>
-<li>Baremetal在關掉SVM mode(多執行序)花的時間比Baremetal多約<code>10~49%</code>。</li>
-<li>QEMU/KVM整體的表現也不錯，但還略遜Baremetal約<code>12~23%</code>。</li>
-<li>VMWare/Ubuntu20.4花的時間比Baremetal多約<code>20~26%</code>。</li>
-<li>VMWare/Windows10花的時間比Baremetal多約<code>20~36%</code>。</li>
+<li>Native的表現不意外是最好的，LXC的表現也非常優秀，兩個數值非常相近。LXC花的時間比Native多約<code>6%</code>(僅Linux)。</li>
+<li>Native在關掉SVM mode(多執行序)花的時間比Native多約<code>10~49%</code>。</li>
+<li>QEMU/KVM整體的表現也不錯，但還略遜Native約<code>12~23%</code>。</li>
+<li>VMWare/Ubuntu20.4花的時間比Native多約<code>20~26%</code>。</li>
+<li>VMWare/Windows10花的時間比Native多約<code>20~36%</code>。</li>
 <li>Intel NUC花的時間比AMD 3900X多約<code>265~431</code>%。與我最原始的痛點在換CPU後改善了2~4倍。</li>
 </ol>
 <p><strong>以一個開發者額外想補充的心得：</strong></p>
