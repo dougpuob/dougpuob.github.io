@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='敗了一顆AMD Ryzen 9 3900X(12 Cores, 24 Threads)，把RAM置頂到192GB，編譯速度遠勝舊機器，想做些實驗留下記錄把感覺數據化。我把幾個我曾經使用過'><title>Build speed comparison between LXC, QEMU, and Native by LLVM</title>
+
+<link rel='canonical' href='https://dougpuob.github.io/post/20210530-build-speed-comparison-btw-lxc-qemu-and-baremetal-by-llvm/'>
+
+<link rel="stylesheet" href="/scss/style.min.376a47deb3c95f87ae753fdc13dfd79f27806636b163a113a6ef59c48c3138af.css"><meta property='og:title' content='Build speed comparison between LXC, QEMU, and Native by LLVM'>
+<meta property='og:description' content='敗了一顆AMD Ryzen 9 3900X(12 Cores, 24 Threads)，把RAM置頂到192GB，編譯速度遠勝舊機器，想做些實驗留下記錄把感覺數據化。我把幾個我曾經使用過'>
+<meta property='og:url' content='https://dougpuob.github.io/post/20210530-build-speed-comparison-btw-lxc-qemu-and-baremetal-by-llvm/'>
+<meta property='og:site_name' content='Douglas Chen'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='LLVM' /><meta property='article:tag' content='PVE' /><meta property='article:tag' content='LXC' /><meta property='article:tag' content='KVM' /><meta property='article:tag' content='QEMU' /><meta property='article:published_time' content='2021-05-30T11:53:06&#43;08:00'/><meta property='article:modified_time' content='2021-05-30T11:53:06&#43;08:00'/><meta property='og:image' content='https://dougpuob.github.io/post/20210530-build-speed-comparison-btw-lxc-qemu-and-baremetal-by-llvm/index.jpg' />
+<meta name="twitter:title" content="Build speed comparison between LXC, QEMU, and Native by LLVM">
+<meta name="twitter:description" content="敗了一顆AMD Ryzen 9 3900X(12 Cores, 24 Threads)，把RAM置頂到192GB，編譯速度遠勝舊機器，想做些實驗留下記錄把感覺數據化。我把幾個我曾經使用過"><meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content='https://dougpuob.github.io/post/20210530-build-speed-comparison-btw-lxc-qemu-and-baremetal-by-llvm/index.jpg' />
+    <link rel="shortcut icon" href="favicon.png" />
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KTM2ZCP9R0"></script>
+<script>
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+	gtag('config', 'G-KTM2ZCP9R0', { 'anonymize_ip': false });
+}
+</script>
+
+    </head>
+    <body class="
+    article-page has-toc
+">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex 
+    
+        extended
+    
+">
+    
+        <div id="article-toolbar">
+            <a href="/" class="back-home">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="15 6 9 12 15 18" />
+</svg>
+
+
+
+                <span></span>
+            </a>
+        </div>
+    
+<main class="main full-width">
+    <article class="has-image main-article">
+    <header class="article-header">
+        <div class="article-image">
+            <a href="/post/20210530-build-speed-comparison-btw-lxc-qemu-and-baremetal-by-llvm/">
+                <img src="/post/20210530-build-speed-comparison-btw-lxc-qemu-and-baremetal-by-llvm/index_huc0a303e03252ea8ad81583290ded3f60_537512_800x0_resize_q75_box.jpg"
+                        srcset="/post/20210530-build-speed-comparison-btw-lxc-qemu-and-baremetal-by-llvm/index_huc0a303e03252ea8ad81583290ded3f60_537512_800x0_resize_q75_box.jpg 800w, /post/20210530-build-speed-comparison-btw-lxc-qemu-and-baremetal-by-llvm/index_huc0a303e03252ea8ad81583290ded3f60_537512_1600x0_resize_q75_box.jpg 1600w"
+                        width="800" 
+                        height="450" 
+                        loading="lazy"
+                        alt="Featured image of post Build speed comparison between LXC, QEMU, and Native by LLVM" />
+                
+            </a>
+        </div>
+    
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+            <a href="/categories/benchmark/" >
+                Benchmark
+            </a>
+        
+    </header>
+    
+
+    <h2 class="article-title">
+        <a href="/post/20210530-build-speed-comparison-btw-lxc-qemu-and-baremetal-by-llvm/">Build speed comparison between LXC, QEMU, and Native by LLVM</a>
+    </h2>
+
+    
+
+    
+    <footer class="article-time">
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+                <time class="article-time--published">May 30, 2021</time>
+            </div>
+        
+
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+                <time class="article-time--reading">
+                    
+                </time>
+            </div>
+        
+    </footer>
+    
+</div>
+</header>
+
+    <section class="article-content">
+    <p>敗了一顆AMD Ryzen 9 3900X(12 Cores, 24 Threads)，把RAM置頂到192GB，編譯速度遠勝舊機器，想做些實驗留下記錄把感覺數據化。我把幾個我曾經使用過的開發環境都放入測試，主要是測試原生機與虛擬機(Windows/Linux in QEMU/KVM、LXC)在編譯LLVM專案榨乾CPU資源的同時，比較那一種花的時間比較少。</p>
+<hr>
+<h2 id="起因">起因</h2>
+<p>我原本使用的Intel便當盒拿來編譯LLVM太慢，一個小改動就需要20~60分鐘的編譯時間，下班時間花在side project時間本來就不多，其中有一大半是在等待有些浪費。除了編譯還有執行測試(Regression Test與Unit Test)，整個跑完幾次後我變的愈庲愈有耐心了。耐心蓄積到上限後我還是敗了AMD Ryzen 9 3900X (3.8GHz 12 Cores, 24 Threads)，還把DRAM安裝到上限的192GB(事後發現192GB的DRAM有些浪費)，改善之後最好的情況耗時約10~15分鐘，有數倍時顯的改變。</p>
+<p>LLVM是跨平台的專案，每次推上去的patch後，BuildBot machines會分別在Windows與Linux作業系統上跑完編譯與測試，所以我本地端的環境也準備了兩種環境。我習慣的開發環境是Windows，Linux則是在Windows中使用VM安裝Ubuntu，之間透過SSH溝通(VSCode+<a class="link" href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh"  target="_blank" rel="noopener"
+    >Remote SSH</a>)。一切處理好就這樣過了好一陣子，直到朋友向我提到<code>PVE</code>(Proxomax Virtual Environment)很像可以幫上我簡化環境，於是我開始接觸PVE，試著把我的開發環境架建在PVE。</p>
+<p>簡單的介紹一下<code>PVE</code>的用途，它使用Debian作為Host OS，整合了LXC與KVM(QEMU)的虛擬環境技術，讓我可以最大比例的共享AMD R9 3900X的硬體資源。<code>PVE</code>整合的非常友善，大部份的事都可以透過WebUI處理完，非常的方便。從Intel NUC始換過去的前後，我沒有特別留下編譯所需的時間，只覺得快多了卻沒有比較的數據。有了PVE後環境就更豐富，更多了LXC與KVM的虛擬環境，事情不可能只有優點，很直覺的能想的到是虛擬環境可能會與原生機有些差異，到底差多少我一直很好奇，於是就催生了這篇文章。</p>
+<p>下面就是我測試結果、方式&amp;條件、還有結論。</p>
+<hr>
+<h2 id="測試結果">測試結果</h2>
+<h3 id="測試數據">測試數據</h3>
+<ul>
+<li>
+<p><strong>結果比較(時間)</strong></p>
+<table>
+<thead>
+<tr>
+<th>AMD R9 3900x</th>
+<th>Ninja-Vs2019</th>
+<th>MSBuild-Vs2019</th>
+<th>Ninja-Gcc</th>
+<th>Core</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BareMetal-Native[SVM]</td>
+<td>11.96</td>
+<td>23.96</td>
+<td>11.31</td>
+<td>24</td>
+</tr>
+<tr>
+<td>BareMetal-Native</td>
+<td>17.86</td>
+<td>26.36</td>
+<td>14.54</td>
+<td>12</td>
+</tr>
+<tr>
+<td>PVE-QEMU/KVM</td>
+<td>13.68</td>
+<td>26.85</td>
+<td>13.99</td>
+<td>24</td>
+</tr>
+<tr>
+<td>PVE-lxc</td>
+<td>x</td>
+<td>x</td>
+<td>12.05</td>
+<td>24</td>
+</tr>
+<tr>
+<td>VMware-Windows10</td>
+<td>16.3</td>
+<td>29.79</td>
+<td>13.64</td>
+<td>24</td>
+</tr>
+<tr>
+<td>VMware-Ubuntu20.4</td>
+<td>15.58</td>
+<td>29.7</td>
+<td>14.31</td>
+<td>24</td>
+</tr>
+<tr>
+<td>BareMetal-Native</td>
+<td>51.66</td>
+<td>63.68</td>
+<td>46.76</td>
+<td>8</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Intel NUC i5</th>
+<th>Ninja-Vs2019</th>
+<th>MSBuild-Vs2019</th>
+<th>Ninja-Gcc</th>
+<th>Core</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BareMetal-Native</td>
+<td>51.66</td>
+<td>63.68</td>
+<td>46.76</td>
+<td>8</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>
+<p><strong>結果比較(百分比)</strong></p>
+<table>
+<thead>
+<tr>
+<th>AMD R9 3900x</th>
+<th>Ninja-Vs2019</th>
+<th>MSBuild-Vs2019</th>
+<th>Ninja-Gcc</th>
+<th>Core</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BareMetal-Native[SVM]</td>
+<td>106%</td>
+<td>212%</td>
+<td>100%</td>
+<td>24</td>
+</tr>
+<tr>
+<td>BareMetal-Native</td>
+<td>158%</td>
+<td>233%</td>
+<td>129%</td>
+<td>12</td>
+</tr>
+<tr>
+<td>PVE-QEMU/KVM</td>
+<td>121%</td>
+<td>237%</td>
+<td>124%</td>
+<td>24</td>
+</tr>
+<tr>
+<td>PVE-lxc</td>
+<td>x</td>
+<td>x</td>
+<td>107%</td>
+<td>24</td>
+</tr>
+<tr>
+<td>VMware-Windows10</td>
+<td>144%</td>
+<td>263%</td>
+<td>121%</td>
+<td>24</td>
+</tr>
+<tr>
+<td>VMware-Ubuntu20.4</td>
+<td>15.58</td>
+<td>263%</td>
+<td>127%</td>
+<td>24</td>
+</tr>
+<tr>
+<td>BareMetal-Native</td>
+<td>51.66</td>
+<td>563%</td>
+<td>413%</td>
+<td>8</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Intel NUC i5</th>
+<th>Ninja-Vs2019</th>
+<th>MSBuild-Vs2019</th>
+<th>Ninja-Gcc</th>
+<th>Core</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BareMetal-Native</td>
+<td>51.66</td>
+<td>563%</td>
+<td>413%</td>
+<td>8</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<p>這份測試所 &hellip;</p>
+<ul>
+<li>有的完整詳細的測試數據表，可以在這[<a class="link" href="summary-result-table-details.png" >下載</a>]的到。</li>
+<li>使用的時間單位都是<code>分鐘</code>。</li>
+<li>使用的<strong>主要電腦</strong>是<code>AMD</code> Ryzen 9 3900X (3.8GHz 12 Cores, 24 Threads)。</li>
+<li>使用的<strong>額外電腦</strong>是<code>Intel</code> NUC i5-10210U (1.60GHz 4 Cores, 8 Thrreads)。</li>
+<li>指的<code>no SVM</code>(Secure Virtualal Machine)是指在BIOS中關掉AMD CPU的多執行緒功能(所以僅有12 Cores，沒有另外的12個Threads了)。</li>
+</ul>
+<p><strong>額外說明</strong></p>
+<ul>
+<li><code>x</code>    : 無沒資料，因為LXC上不支援Visual Studio 2019。</li>
+<li><code>#CPU</code> : Cores + Threads</li>
+<li><code>8</code>    : 4 Cores + 4 Threads (on Intel CPU)</li>
+<li><code>12</code>   : Cores (on AMD CPU，no SVM)</li>
+<li><code>24</code>   : 12 Cores + 12 Threads (on AMD CPU)</li>
+<li><code>32</code>   : 32GB (Intel CPU機器上全部的記憶體)</li>
+<li><code>64</code>   : 64GB (AMD CPU機器上分配64GB給LXC/VM虛擬機使用)</li>
+<li><code>192</code>  : 192GB (AMD CPU機器上全部的記憶)</li>
+<li><code>Ninja-Gcc</code>      : 是在Ubuntu20.4中執行。</li>
+<li><code>Ninja-Vs2019</code>   : 是在Windows10中執行。</li>
+<li><code>MSBuild-Vs2019</code> : 是在Windows10中執行。</li>
+</ul>
+<h3 id="長條圖">長條圖</h3>
+<p><code>愈短愈好</code></p>
+<p><figure 
+	
+		class="gallery-image" 
+		style="
+			flex-grow: 189; 
+			flex-basis: 454px"
+	>
+	<a href="/post/20210530-build-speed-comparison-btw-lxc-qemu-and-baremetal-by-llvm/column-chart.png" data-size="997x526">
+		<img src="/post/20210530-build-speed-comparison-btw-lxc-qemu-and-baremetal-by-llvm/column-chart.png"
+			width="997"
+			height="526"
+			srcset="/post/20210530-build-speed-comparison-btw-lxc-qemu-and-baremetal-by-llvm/column-chart_hu9c8e2853152ea28166e195eaae6fbdee_19418_480x0_resize_box_3.png 480w, /post/20210530-build-speed-comparison-btw-lxc-qemu-and-baremetal-by-llvm/column-chart_hu9c8e2853152ea28166e195eaae6fbdee_19418_1024x0_resize_box_3.png 1024w"
+			loading="lazy"
+			alt="Column chart">
+	</a>
+	
+	<figcaption>Column chart</figcaption>
+	
+</figure></p>
+<p> </p>
+<h3 id="長條圖-加入intel-ncu">長條圖 (加入Intel NCU)</h3>
+<p><code>愈短愈好</code></p>
+<p><figure 
+	
+		class="gallery-image" 
+		style="
+			flex-grow: 189; 
+			flex-basis: 454px"
+	>
+	<a href="/post/20210530-build-speed-comparison-btw-lxc-qemu-and-baremetal-by-llvm/column-chart-with-intel-nuc.png" data-size="997x526">
+		<img src="/post/20210530-build-speed-comparison-btw-lxc-qemu-and-baremetal-by-llvm/column-chart-with-intel-nuc.png"
+			width="997"
+			height="526"
+			srcset="/post/20210530-build-speed-comparison-btw-lxc-qemu-and-baremetal-by-llvm/column-chart-with-intel-nuc_hu9cd5783bf1de6af9254490f4d8fe0255_19800_480x0_resize_box_3.png 480w, /post/20210530-build-speed-comparison-btw-lxc-qemu-and-baremetal-by-llvm/column-chart-with-intel-nuc_hu9cd5783bf1de6af9254490f4d8fe0255_19800_1024x0_resize_box_3.png 1024w"
+			loading="lazy"
+			alt="Pie chart including Intel NUC">
+	</a>
+	
+	<figcaption>Pie chart including Intel NUC</figcaption>
+	
+</figure></p>
+<hr>
+<h2 id="方法條件">方法&amp;條件</h2>
+<p>測試的方式很直覺，安裝完作業系統後把它更新到最新的，Windows Update或apt update然後安裝所需軟體，接下來就敲指令進行測試。其中有一項是no SVM是進到BIOS關掉SVM mode之外，我沒有為硬體多作些設定或調校。其中有些數據我重新測試後會得到不一樣的數值，我僅保留最小數值的那次。主系統上的硬碟是1TB M.2的NVMe速度是PCIe Gen3，所以Disk I/O不會是效能的瓶頸，沒進行討論。</p>
+<p><strong>使用到的機器</strong></p>
+<ul>
+<li>Intel NUC i5-10210U (1.60GHz 4 Cores, 8 Thrreads) 32GB DRAM<br>
+(這台電腦裡有使用我們公司的IC，還有我寫的Kernel Driver，用起來有種特別的心情)</li>
+<li>AMD Ryzen 9 3900X (3.8GHz 12 Cores, 24 Threads) 128GB DRAM</li>
+</ul>
+<p><strong>虛擬機</strong></p>
+<ul>
+<li>VMWare/Windows10的Host OS是Windows10。</li>
+<li>VMWare/Ubuntu20.4的Host OS是Windows10。</li>
+</ul>
+<p><strong>虛擬機磁碟格式</strong></p>
+<ul>
+<li>LXC      : <code>QCOW2</code></li>
+<li>QEMU/KVM : <code>QCOW2</code></li>
+<li>VMWare   : <code>VMDK</code></li>
+</ul>
+<p><strong>編譯目標</strong></p>
+<ul>
+<li><a class="link" href="https://github.com/llvm/llvm-project/tree/llvmorg-11.0.1"  target="_blank" rel="noopener"
+    >llvmorg-11.1.0</a></li>
+</ul>
+<p><strong>編譯指令&amp;參數</strong></p>
+<p>最近在嘗試PowerShell，就用它來寫腳本。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="c"># Ubuntu20.4(Ninja-Gcc) &amp; Windows10(Ninja-Vs2019)</span>
+<span class="nb">Measure-Command</span> <span class="p">{</span>                                               <span class="p">`</span>
+<span class="n">cmake</span> <span class="n">-G</span> <span class="s2">&#34;Ninja&#34;</span>                                                <span class="p">`</span>
+      <span class="n">-DLLVM_ENABLE_ABI_BREAKING_CHECKS</span><span class="p">=</span><span class="n">OFF</span>                     <span class="p">`</span>
+      <span class="n">-DLLVM_TARGETS_TO_BUILD</span><span class="p">=</span><span class="s2">&#34;X86&#34;</span>                             <span class="p">`</span>
+      <span class="n">-DLLVM_ENABLE_PROJECTS</span><span class="p">=</span><span class="s2">&#34;clang;llvm;clang-tools-extra&#34;</span>     <span class="p">`</span>
+      <span class="n">-DCMAKE_BUILD_TYPE</span><span class="p">=</span><span class="n">Release</span>                                <span class="p">`</span>
+      <span class="p">../</span><span class="n">llvm</span>                                                   <span class="p">`</span>
+<span class="p">}</span>
+
+<span class="nb">Measure-Command</span> <span class="p">{</span>                                               <span class="p">`</span>
+<span class="n">cmake</span> <span class="p">-</span><span class="n">-build</span> <span class="p">.</span> <span class="p">-</span><span class="n">-config</span> <span class="n">Release</span>                                <span class="p">`</span>
+<span class="p">}</span>
+</code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="c"># Windows10(MSBuild-Vs2019)</span>
+<span class="nb">Measure-Command</span> <span class="p">{</span>                                               <span class="p">`</span>
+<span class="n">cmake</span> <span class="n">-G</span> <span class="s2">&#34;Visual Studio 16 2019&#34;</span> <span class="n">-A</span> <span class="n">X64</span>                         <span class="p">`</span>
+      <span class="n">-DLLVM_ENABLE_ABI_BREAKING_CHECKS</span><span class="p">=</span><span class="n">OFF</span>                     <span class="p">`</span>
+      <span class="n">-DLLVM_TARGETS_TO_BUILD</span><span class="p">=</span><span class="s2">&#34;X86&#34;</span>                             <span class="p">`</span>
+      <span class="n">-DLLVM_ENABLE_PROJECTS</span><span class="p">=</span><span class="s2">&#34;clang;llvm;clang-tools-extra&#34;</span>     <span class="p">`</span>
+      <span class="n">-DCMAKE_BUILD_TYPE</span><span class="p">=</span><span class="n">Release</span>                                <span class="p">`</span>
+      <span class="p">../</span><span class="n">llvm</span>                                                   <span class="p">`</span>
+<span class="p">}</span>
+
+<span class="nb">Measure-Command</span> <span class="p">{</span>                                               <span class="p">`</span>
+<span class="n">cmake</span> <span class="p">-</span><span class="n">-build</span> <span class="p">.</span> <span class="p">-</span><span class="n">-config</span> <span class="n">Release</span>                                <span class="p">`</span>
+<span class="p">}</span>
+</code></pre></div><hr>
+<h2 id="結論">結論</h2>
+<p>整個測試大概花了2~3天完成，其中包括了等待與手殘重測所花的時間。測試中所使用到的QEMU/KVM與LXC都是基於PVE的環境，過程遇到些問題要感謝<a class="link" href="http://blog.jason.tools/"  title="節省工具箱"
+     target="_blank" rel="noopener"
+    >節省哥</a>的幫助，還好有他我的PVE之路走的格外的順利。</p>
+<p><strong>我大至用條列式整理我的結論：</strong></p>
+<ol>
+<li>Native的表現不意外是最好的，LXC的表現也非常優秀，兩個數值非常相近。LXC花的時間比Native多約<code>6%</code>(僅Linux)。</li>
+<li>Native在關掉SVM mode(多執行序)花的時間比Native多約<code>10~49%</code>。</li>
+<li>QEMU/KVM整體的表現也不錯，但還略遜Native約<code>12~23%</code>。</li>
+<li>VMWare/Ubuntu20.4花的時間比Native多約<code>20~26%</code>。</li>
+<li>VMWare/Windows10花的時間比Native多約<code>20~36%</code>。</li>
+<li>Intel NUC花的時間比AMD 3900X多約<code>265~431</code>%。與我最原始的痛點在換CPU後改善了2~4倍。</li>
+</ol>
+<p><strong>以一個開發者額外想補充的心得：</strong></p>
+<ol>
+<li>看百分比感覺差很多，實際上多個1~3分不會有太強烈的感覺。反到是天氣愈來愈熱有時後CPU可以到83~85度C，還沒覺得慢之前就熱到開始流汗了。</li>
+<li>裡面我最無奈的是MSBuild-Vs2019這項最有感，明顯慢了1倍。我通常拿它看程式碼追程式碼，編譯就交給Ninja與compilers。</li>
+<li>我全部的記憶體是192GB，編譯Release的版本大概需要32GB我覺得是甜蜜點。</li>
+<li>接上一項，在Linux上如果linker使用lld使用到的記憶體會有明顯的下降，約10GB左右就足夠了。</li>
+<li>使用VMWare編譯時我發現CPU的溫度會特別高，我想應該是VM程式有動態調整CPU的vcore。(沒特別是查證原因，留給自己的記錄)</li>
+<li>最後，家裡並沒有使用PVE，我反而是把PVE應用在上班的工作中，雖然PVE增加了應用的多樣性與方便性，我例出我沒有使用原因：
+<ol>
+<li>家裡的機器只會有我一個人使用，分享再多的硬體資源我還是只有一個人兩雙手。</li>
+<li>改好程式碼後同時在Windows, Linux編譯的速度不會比較快，而且失敗重試所花的時間會更久。</li>
+<li>效能還是比原生機差一些。</li>
+<li>最主要的原因是「我不想一次開兩台電腦」。</li>
+</ol>
+</li>
+</ol>
+<p><code>以上資訊僅提供參考，測試數據可能會依設定或其它因素有所不同。</code></p>
+<hr>
+<h2 id="參考資訊">參考資訊</h2>
+<ul>
+<li>
+<p>AMD Ryzen™ 9 3900X 官網資訊<br>
+<a class="link" href="https://www.amd.com/en/products/cpu/amd-ryzen-9-3900x"  target="_blank" rel="noopener"
+    >https://www.amd.com/en/products/cpu/amd-ryzen-9-3900x</a></p>
+</li>
+<li>
+<p>Intel® NUC (NUC10i5FNB)<br>
+<a class="link" href="https://ark.intel.com/content/www/tw/zh/ark/products/189239/intel-nuc-10-performance-kit-nuc10i5fnh.html"  target="_blank" rel="noopener"
+    >https://ark.intel.com/content/www/tw/zh/ark/products/189239/intel-nuc-10-performance-kit-nuc10i5fnh.html</a></p>
+</li>
+<li>
+<p>LLVM source code<br>
+<a class="link" href="https://github.com/llvm/llvm-project/tree/llvmorg-11.0.1"  target="_blank" rel="noopener"
+    >https://github.com/llvm/llvm-project/tree/llvmorg-11.0.1</a></p>
+</li>
+<li>
+<p>Proxmox VE Documentation<br>
+<a class="link" href="https://pve.proxmox.com/pve-docs/"  target="_blank" rel="noopener"
+    >https://pve.proxmox.com/pve-docs/</a></p>
+</li>
+<li>
+<p>節省工具箱<br>
+<a class="link" href="http://blog.jason.tools"  target="_blank" rel="noopener"
+    >http://blog.jason.tools</a></p>
+</li>
+</ul>
+<hr>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+    <section class="article-tags">
+        
+            <a href="/tags/llvm/">LLVM</a>
+        
+            <a href="/tags/pve/">PVE</a>
+        
+            <a href="/tags/lxc/">LXC</a>
+        
+            <a href="/tags/kvm/">KVM</a>
+        
+            <a href="/tags/qemu/">QEMU</a>
+        
+    </section>
+
+
+    
+    <section class="article-copyright">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
+</svg>
+
+
+
+        <span>Licensed under CC BY-NC-SA 4.0</span>
+    </section>
+    </footer>
+
+
+    
+</article>
+
+    
+
+    <aside class="related-contents--wrapper">
+    
+    
+</aside>
+
+     
+    
+        
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2022 Douglas Chen
+    </section>
+    
+    <section class="powerby">
+         <br />
+        
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer="true"
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer="true"
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css"integrity="sha256-c0uckgykQ9v5k&#43;IqViZOZKc47Jn7KQil4/MP3ySA3F8="crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css"integrity="sha256-SBLU4vv6CA6lHsZ1XyTdhyjJxCjPif/TRkjnsyGAGnE="crossorigin="anonymous"
+            >
+
+            </main>
+    
+        <aside class="sidebar right-sidebar sticky">
+            <section class="widget archives">
+                <div class="widget-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <line x1="5" y1="9" x2="19" y2="9" />
+  <line x1="5" y1="15" x2="19" y2="15" />
+  <line x1="11" y1="4" x2="7" y2="20" />
+  <line x1="17" y1="4" x2="13" y2="20" />
+</svg>
+
+
+
+                </div>
+                <h2 class="widget-title section-title"></h2>
+                
+                <div class="widget--toc">
+                    <nav id="TableOfContents">
+  <ol>
+    <li><a href="#起因">起因</a></li>
+    <li><a href="#測試結果">測試結果</a>
+      <ol>
+        <li><a href="#測試數據">測試數據</a></li>
+        <li><a href="#長條圖">長條圖</a></li>
+        <li><a href="#長條圖-加入intel-ncu">長條圖 (加入Intel NCU)</a></li>
+      </ol>
+    </li>
+    <li><a href="#方法條件">方法&amp;條件</a></li>
+    <li><a href="#結論">結論</a></li>
+    <li><a href="#參考資訊">參考資訊</a></li>
+  </ol>
+</nav>
+                </div>
+            </section>
+        </aside>
+    
+
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js"integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g="crossorigin="anonymous"
+                defer="false"
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>
